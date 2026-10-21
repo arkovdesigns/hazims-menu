@@ -124,7 +124,7 @@ if(appliedPromo){
  }
 }
 const discount=promoDiscount();
-const discountSummary=discount>0?'*Subtotal: '+money(calc())+'*\\n*Promo code: '+promoConfig.code+' ('+promoConfig.percent+'%)*\\n*Discount: -'+money(discount)+'*\\n':'';
+const discountSummary=discount>0?'*Subtotal: '+money(calc())+'*\n*Promo code: '+promoConfig.code+' ('+promoConfig.percent+'%)*\n*Discount: -'+money(discount)+'*\n':'';
 let msg=`*New Order | Hazim’s Patisserie*\n━━━━━━━━━━━━\n${detail}\n━━━━━━━━━━━━\n${lines}\n━━━━━━━━━━━━\n${discountSummary}*Total: ${money(promoTotal())}*${notes?'\nNotes: '+notes:''}`;
 const whatsappUrl='https://wa.me/61449988509?text='+encodeURIComponent(msg);
 if(checkoutWindow)checkoutWindow.location.href=whatsappUrl;
