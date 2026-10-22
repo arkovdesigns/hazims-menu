@@ -140,4 +140,4 @@ $('search').addEventListener('input',render);
 $('promoInput').addEventListener('input',()=>{if(appliedPromo&&$('promoInput').value.trim().toUpperCase()!==appliedPromo){appliedPromo=null;promoMessage('');updatePromoDisplay()}});
 window.addEventListener('focus',()=>{if($('overlay').classList.contains('open'))loadPromoConfig().then(updatePromoDisplay)});
 setInterval(()=>{if($('overlay').classList.contains('open'))updatePromoDisplay()},15000);
-render();</script></body></html>
+render();fetch('/api/menu').then(r=>r.json()).then(j=>{if(!j.products)return;const a=[],im={};j.products.forEach(p=>{let i=/^p([0-9]+)$/.test(p.id)?Number(p.id.slice(1)):a.length+22;a[i]=[p.name,p.price,p.unit,p.description,p.category,p.hidden];if(p.image)im[i]=p.image});data=a;productImages=im;render()}).catch(()=>{});</script></body></html>
