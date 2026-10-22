@@ -1,0 +1,232 @@
+{
+  "products": [
+    {
+      "id": "p0",
+      "name": "TAMARA",
+      "price": 15,
+      "unit": "500 g",
+      "description": "Shortbread biscuit with a date filling, rolled in ground pistachio.",
+      "category": "Cookies & Maamoul",
+      "image": "assets/tamara.jpg",
+      "hidden": false
+    },
+    {
+      "id": "p1",
+      "name": "BASMA ASHTA",
+      "price": 35,
+      "unit": "1 kg",
+      "description": "Crispy kataifi pastry with a rich ashta cream filling.",
+      "category": "Cream & Knefeh",
+      "image": "",
+      "hidden": false
+    },
+    {
+      "id": "p2",
+      "name": "ZNOOD",
+      "price": 30,
+      "unit": "Dozen (12 pcs)",
+      "description": "Ashta cream wrapped in crispy filo pastry, deep-fried in ghee and dipped in rosewater syrup.",
+      "category": "Cream & Knefeh",
+      "image": "assets/znood.jpg",
+      "hidden": false
+    },
+    {
+      "id": "p3",
+      "name": "KNEFEH CHEESE",
+      "price": 30,
+      "unit": "1 kg",
+      "description": "Two baked layers of fine semolina, filled with sweet cheese and rosewater syrup.",
+      "category": "Cream & Knefeh",
+      "image": "assets/knefeh-cheese.jpg",
+      "hidden": false
+    },
+    {
+      "id": "p4",
+      "name": "KNEFEH ASHTA",
+      "price": 30,
+      "unit": "1 kg",
+      "description": "Two baked layers of fine semolina filled with ashta cream and topped with rosewater syrup.",
+      "category": "Cream & Knefeh",
+      "image": "assets/knefeh-ashta.jpg",
+      "hidden": false
+    },
+    {
+      "id": "p5",
+      "name": "SHAABIYAT / WARBAAT",
+      "price": 35,
+      "unit": "1 kg",
+      "description": "Flaky layered filo pastry filled with ashta cream and drizzled with syrup.",
+      "category": "Baklava & Pastries",
+      "image": "",
+      "hidden": false
+    },
+    {
+      "id": "p6",
+      "name": "HALAWET EL RIZ",
+      "price": 30,
+      "unit": "1 kg",
+      "description": "Sweet cheese and rice sweetened with rosewater syrup.",
+      "category": "Halawet & Mafroukeh",
+      "image": "assets/halawet-el-riz.jpg",
+      "hidden": false
+    },
+    {
+      "id": "p7",
+      "name": "HALAWET EL JIBN",
+      "price": 30,
+      "unit": "1 kg",
+      "description": "Semolina and cheese dough, topped with cream and sugar syrup.",
+      "category": "Halawet & Mafroukeh",
+      "image": "assets/halawet-el-jibn.jpg",
+      "hidden": false
+    },
+    {
+      "id": "p8",
+      "name": "BAKLAVA MIX",
+      "price": 30,
+      "unit": "1 kg",
+      "description": "A selection of buttery filo pastries filled with mixed nuts and topped with syrup.",
+      "category": "Baklava & Pastries",
+      "image": "assets/baklava-mix.jpg",
+      "hidden": false
+    },
+    {
+      "id": "p9",
+      "name": "WARD ELSHAM",
+      "price": 30,
+      "unit": "Dozen (12 pcs)",
+      "description": "Oven-baked filo pastry filled with fresh ashta cream.",
+      "category": "Cream & Knefeh",
+      "image": "assets/ward-elsham.jpg",
+      "hidden": false
+    },
+    {
+      "id": "p10",
+      "name": "BARAZEK",
+      "price": 15,
+      "unit": "500 g",
+      "description": "Crunchy sesame and pistachio cookies.",
+      "category": "Cookies & Maamoul",
+      "image": "assets/barazek.jpg",
+      "hidden": false
+    },
+    {
+      "id": "p11",
+      "name": "GHRAYBEH",
+      "price": 13,
+      "unit": "500 g",
+      "description": "Traditional shortbread cookies made with ghee.",
+      "category": "Cookies & Maamoul",
+      "image": "assets/ghraybeh.jpg",
+      "hidden": false
+    },
+    {
+      "id": "p12",
+      "name": "SESAME DATE MAAMOUL",
+      "price": 14,
+      "unit": "500 g",
+      "description": "Shortbread cookies stuffed with date paste and rolled in sesame seeds.",
+      "category": "Cookies & Maamoul",
+      "image": "",
+      "hidden": false
+    },
+    {
+      "id": "p13",
+      "name": "DATE MAAMOUL",
+      "price": 25,
+      "unit": "1 kg",
+      "description": "Semolina cookies filled with dates.",
+      "category": "Cookies & Maamoul",
+      "image": "assets/date-maamoul.jpg",
+      "hidden": false
+    },
+    {
+      "id": "p14",
+      "name": "WALNUT MAAMOUL",
+      "price": 26,
+      "unit": "1 kg",
+      "description": "Semolina cookies with a walnut filling.",
+      "category": "Cookies & Maamoul",
+      "image": "",
+      "hidden": false
+    },
+    {
+      "id": "p15",
+      "name": "MAFROUKEH",
+      "price": 35,
+      "unit": "1 kg",
+      "description": "Creamy and crunchy semolina dessert, flavored with orange blossom and rose water, topped with ashta.",
+      "category": "Halawet & Mafroukeh",
+      "image": "assets/mfroukeh.jpg",
+      "hidden": false
+    },
+    {
+      "id": "p16",
+      "name": "NAMOURA",
+      "price": 30,
+      "unit": "1 kg",
+      "description": "Semolina and coconut cake soaked in syrup and topped with almonds.",
+      "category": "Baklava & Pastries",
+      "image": "",
+      "hidden": false
+    },
+    {
+      "id": "p17",
+      "name": "MAAMOUL MAD ASHTA",
+      "price": 28,
+      "unit": "1 kg",
+      "description": "Flat semolina cookies layered with ashta cream and crushed pistachios.",
+      "category": "Cream & Knefeh",
+      "image": "assets/maamoul-ashta.jpg",
+      "hidden": false
+    },
+    {
+      "id": "p18",
+      "name": "PISTACHIO MAAMOUL",
+      "price": 30,
+      "unit": "1 kg",
+      "description": "Semolina cookies stuffed with pistachio filling.",
+      "category": "Cookies & Maamoul",
+      "image": "assets/pistachio-maamoul.jpg",
+      "hidden": false
+    },
+    {
+      "id": "p19",
+      "name": "ASHTA MIX",
+      "price": 35,
+      "unit": "1 kg",
+      "description": "A selection of ashta sweets including znoud, ward elsham, knefeh and halawet el jibn.",
+      "category": "Assortments",
+      "image": "assets/ashta-mix.jpg",
+      "hidden": false
+    },
+    {
+      "id": "p20",
+      "name": "ROLLET HALAWET ELJIBN",
+      "price": 35,
+      "unit": "1 kg",
+      "description": "Rolled halawet el jibn with cream.",
+      "category": "Halawet & Mafroukeh",
+      "image": "",
+      "hidden": false
+    },
+    {
+      "id": "p21",
+      "name": "OUSMALIY ASHTA",
+      "price": 35,
+      "unit": "1 kg",
+      "description": "Crispy pastry layered with ashta cream.",
+      "category": "Cream & Knefeh",
+      "image": "assets/ousmaliy-ashta.jpg",
+      "hidden": false
+    }
+  ],
+  "promo": {
+    "enabled": true,
+    "code": "HAZ1",
+    "percent": 10,
+    "startsAt": "2026-10-22T16:22",
+    "endsAt": "2026-10-23T16:22",
+    "timeZone": "Australia/Sydney"
+  }
+}
