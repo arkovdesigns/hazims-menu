@@ -1,1 +1,67 @@
-<!doctype html><html><head><title>Owner Dashboard</title></head><body><h1>Owner Dashboard</h1></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Owner Dashboard | Hazim's Patisserie</title>
+<style>:root{--blue:#0c3e82;--gold:#dba94b}*{box-sizing:border-box}body{font:15px Arial,sans-serif;background:#f5f6f8;color:#24354b;margin:0}header{background:var(--blue);color:white;padding:22px 16px;text-align:center;border-bottom:4px solid var(--gold)}header h1{font-size:22px;margin:0 0 7px}main{max-width:920px;margin:auto;padding:16px}.panel{background:white;border:1px solid #e0e4e9;border-radius:14px;padding:18px;margin-bottom:15px;box-shadow:0 3px 14px #0000000b}h2{margin:0 0 16px;font-size:19px}label{display:block;font-size:13px;font-weight:bold;margin:11px 0 5px}input,select,textarea{font:inherit;width:100%;border:1px solid #ccd3dd;border-radius:9px;padding:11px;min-height:43px;background:white}textarea{min-height:70px;resize:vertical}input[type=checkbox]{width:20px;min-height:20px;height:20px;accent-color:var(--blue)}button{font:inherit;font-weight:bold;border:0;border-radius:9px;padding:12px 15px;background:var(--blue);color:white;cursor:pointer}button.secondary{background:#e9eef5;color:#173d69}button.danger{background:#b42332}button:disabled{opacity:.5;cursor:wait}.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.check{display:flex;align-items:center;gap:8px}.check label{margin:0}.product{border:1px solid #e3e8ee;padding:13px;border-radius:13px;margin:12px 0;background:#fdfefe}.productHead{display:flex;gap:13px;align-items:center}.thumb{width:78px;height:78px;border-radius:9px;object-fit:cover;background:#f0f0f0}.productHead strong{font-size:15px}.muted{color:#63738a;font-size:12px;line-height:1.5}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.status{min-height:24px;margin:12px 0;font-weight:bold;color:#0c6a46}.error{color:#b42332}.hidden{display:none!important}.editbox{border-top:1px solid #e1e6ec;margin-top:12px;padding-top:10px}.pill{border-radius:50px;padding:4px 9px;background:#f3e8d2;font-size:12px}.toolbar{position:sticky;top:0;z-index:10;background:#fff;box-shadow:0 2px 12px #0001;padding:12px;border-radius:11px;margin-bottom:15px}a{color:var(--blue)}@media(max-width:600px){.grid{grid-template-columns:1fr}main{padding:10px}.panel{padding:14px}.productHead{align-items:flex-start}}</style></head>
+<body><header><h1>Hazim's Patisserie</h1><div>Owner Dashboard · Products, prices, photos & promotions</div></header><main>
+<section id="loginPanel" class="panel"><h2>Owner sign in</h2><label for="password">Password</label><input type="password" id="password" autocomplete="current-password" placeholder="Enter your owner password"><div class="actions"><button onclick="login()">Sign in</button></div><p id="loginMsg" class="status"></p></section>
+<section id="dashboard" class="hidden">
+<div class="toolbar row"><span><strong>Menu management</strong> <span id="count" class="pill"></span></span><div class="actions"><button onclick="saveAll()" id="saveBtn">Save all changes</button><button class="secondary" onclick="logout()">Sign out</button></div></div>
+<p id="status" class="status"></p>
+<section class="panel"><div class="row"><h2>Products</h2><button onclick="addProduct()">+ Add product</button></div><input id="filter" placeholder="Search products..." oninput="drawProducts()"><div id="products"></div></section>
+<section class="panel"><h2>Percentage discount</h2><div class="check"><input type="checkbox" id="enabled"><label for="enabled">Enable promotion</label></div><div class="grid"><div><label for="code">Promo code</label><input id="code" placeholder="EID15" maxlength="32"></div><div><label for="percent">Discount (%)</label><input id="percent" type="number" min="0.1" max="100" step="0.1"></div><div><label for="startsAt">Start date and time</label><input id="startsAt" type="datetime-local"></div><div><label for="endsAt">End date and time</label><input id="endsAt" type="datetime-local"></div><div><label for="timeZone">Store timezone</label><select id="timeZone"><option>Australia/Sydney</option><option>Australia/Brisbane</option><option>Australia/Adelaide</option><option>Australia/Perth</option><option>Australia/Darwin</option><option>Australia/Hobart</option><option>Asia/Riyadh</option></select></div></div><p class="muted">The offer expires automatically at the selected time. Use the Save all changes button above to publish.</p></section>
+<p><a href="/">← View customer menu</a></p></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let state={products:[],promo:{}},dirty=false;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const setStatus=(s,error=false)=>{$('status').textContent=s;$('status').className='status'+(error?' error':'')};
+function showDashboard(show){$('loginPanel').classList.toggle('hidden',show);$('dashboard').classList.toggle('hidden',!show)}
+async function api(url,method='GET',body){const r=await fetch(url,{method,credentials:'same-origin',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store'});const j=await r.json().catch(()=>({error:'Unexpected server response'}));if(!r.ok)throw Error(j.error||'Request failed');return j}
+async function login(){try{await api('/api/admin-session','POST',{password:$('password').value});$('password').value='';await load();showDashboard(true)}catch(e){$('loginMsg').textContent=e.message;$('loginMsg').className='status error'}}
+async function logout(){await api('/api/admin-session','POST',{action:'logout'}).catch(()=>{});showDashboard(false);state={products:[],promo:{}}}
+async function load(){const j=await api('/api/admin-menu');state={products:j.products,promo:j.promo};['enabled','code','percent','startsAt','endsAt','timeZone'].forEach(k=>{if(k==='enabled')$(k).checked=!!j.promo[k];else $(k).value=j.promo[k]??''});drawProducts();dirty=false;setStatus('')}
+function editProduct(id){const p=state.products.find(x=>x.id===id);if(!p)return;const box=document.getElementById('edit-'+id);box.classList.toggle('hidden');if(!box.classList.contains('hidden'))box.scrollIntoView({behavior:'smooth',block:'nearest'})}
+function update(id,key,value){const p=state.products.find(x=>x.id===id);if(!p)return;p[key]=key==='price'?Number(value):key==='hidden'?!!value:value;dirty=true;if(key==='name'||key==='price'||key==='hidden')drawProducts(id)}
+function drawProducts(openId){
+ const q=$('filter').value.trim().toLowerCase();
+ $('count').textContent=state.products.length+' products';
+ $('products').innerHTML=state.products.filter(p=>!q||p.name.toLowerCase().includes(q)).map(p=>{
+ const img=p.image?'<img class="thumb" src="'+esc(p.image)+'" alt="">':'<div class="thumb"></div>';
+ return '<div class="product"><div class="productHead">'+img+'<div style="flex:1"><strong>'+esc(p.name)+'</strong><p class="muted">'+esc(p.category)+' · $'+Number(p.price).toFixed(2)+' / '+esc(p.unit)+(p.hidden?' · Hidden':'')+'</p></div><button class="secondary" onclick="editProduct('+JSON.stringify(p.id)+')">Edit</button></div>'+
+ '<div id="edit-'+esc(p.id)+'" class="editbox '+(p.id===openId?'':'hidden')+'"><div class="grid">'+
+ field(p,'name','Product name')+field(p,'price','Price ($)','number')+field(p,'unit','Unit')+field(p,'category','Category')+'</div>'+
+ field(p,'description','Description','textarea')+
+ '<label>Photo</label><input type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadPhoto('+JSON.stringify(p.id)+',this)"><p class="muted">JPEG, PNG or WebP up to 4 MB. The photo is uploaded immediately; save the menu afterward.</p>'+
+ '<div class="check"><input type="checkbox" '+(p.hidden?'checked':'')+' onchange="update('+JSON.stringify(p.id)+',\'hidden\',this.checked)"><label>Hide product from customers</label></div>'+
+ '<div class="actions"><button class="danger" onclick="removeProduct('+JSON.stringify(p.id)+')">Delete product</button></div></div></div>';
+ }).join('')||'<p class="muted">No matching products.</p>';
+}
+function field(p,k,label,type='text'){
+ const cb='update('+JSON.stringify(p.id)+','+JSON.stringify(k)+',this.value)';
+ return '<label>'+esc(label)+'</label>'+(type==='textarea'?'<textarea oninput="'+esc(cb)+'">'+esc(p[k])+'</textarea>':'<input type="'+type+'" '+(type==='number'?'min="0" step="0.01" ':'')+'value="'+esc(p[k])+'" oninput="'+esc(cb)+'">');
+}
+function addProduct(){
+ const id='item_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6);
+ state.products.push({id,name:'New product',price:0,unit:'1 kg',category:'Other',description:'',image:'',hidden:true});
+ $('filter').value='';dirty=true;drawProducts(id);setStatus('New product added as hidden. Edit its details, then unhide and Save all changes.');
+}
+function removeProduct(id){const p=state.products.find(x=>x.id===id);if(!p||!confirm('Delete '+p.name+'?'))return;state.products=state.products.filter(x=>x.id!==id);dirty=true;drawProducts()}
+async function uploadPhoto(id,input){
+ const file=input.files?.[0];if(!file)return;
+ if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>4*1024*1024){setStatus('Please choose a JPG, PNG or WebP under 4 MB.',true);return}
+ try{
+ setStatus('Uploading photo...');
+ const response=await fetch('/api/admin-upload?name='+encodeURIComponent(file.name),{method:'POST',credentials:'same-origin',headers:{'Content-Type':file.type},body:file});
+ const result=await response.json();if(!response.ok)throw Error(result.error||'Upload failed');
+ const p=state.products.find(x=>x.id===id);if(p)p.image=result.url;
+ dirty=true;drawProducts(id);setStatus('Photo uploaded. Click Save all changes to publish it.');
+ }catch(e){setStatus(e.message,true)}
+}
+async function saveAll(){
+ const promo={enabled:$('enabled').checked,code:$('code').value.trim().toUpperCase(),percent:Number($('percent').value),startsAt:$('startsAt').value,endsAt:$('endsAt').value,timeZone:$('timeZone').value};
+ const btn=$('saveBtn');btn.disabled=true;setStatus('Saving...');
+ try{await api('/api/admin-menu','POST',{products:state.products,promo});dirty=false;setStatus('Saved! Your menu and promotions are now updated.');}
+ catch(e){setStatus(e.message,true)}finally{btn.disabled=false}
+}
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+(async()=>{try{const j=await api('/api/admin-session');if(j.authenticated){await load();showDashboard(true)}}catch(e){}})();
+</script></body></html>
