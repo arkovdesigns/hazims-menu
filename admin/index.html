@@ -19,7 +19,7 @@ function showDashboard(show){$('loginPanel').classList.toggle('hidden',show);$('
 async function api(url,method='GET',body){const r=await fetch(url,{method,credentials:'same-origin',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store'});const j=await r.json().catch(()=>({error:'Unexpected server response'}));if(!r.ok)throw Error(j.error||'Request failed');return j}
 async function login(){try{await api('/api/admin-session','POST',{password:$('password').value});$('password').value='';await load();showDashboard(true)}catch(e){$('loginMsg').textContent=e.message;$('loginMsg').className='status error'}}
 async function logout(){await api('/api/admin-session','POST',{action:'logout'}).catch(()=>{});showDashboard(false);state={products:[],promo:{}}}
-async function load(){const j=await api('/api/admin-menu');state={products:j.products,promo:j.promo};['enabled','code','percent','startsAt','endsAt','timeZone'].forEach(k=>{if(k==='enabled')$(k).checked=!!j.promo[k];else $(k).value=j.promo[k]??''});drawProducts();dirty=false;setStatus('')}
+async function load(){const j=await api('/api/admin-menu');state={products:j.products,promo:j.promo,version:j.version};['enabled','code','percent','startsAt','endsAt','timeZone'].forEach(k=>{if(k==='enabled')$(k).checked=!!j.promo[k];else $(k).value=j.promo[k]??''});drawProducts();dirty=false;setStatus('')}
 function editProduct(id){const p=state.products.find(x=>x.id===id);if(!p)return;const box=document.getElementById('edit-'+id);box.classList.toggle('hidden');if(!box.classList.contains('hidden'))box.scrollIntoView({behavior:'smooth',block:'nearest'})}
 function update(id,key,value){const p=state.products.find(x=>x.id===id);if(!p)return;p[key]=key==='price'?Number(value):key==='hidden'?!!value:value;dirty=true}
 function drawProducts(openId){
@@ -71,7 +71,7 @@ async function changePassword(){
 async function saveAll(){
  const promo={enabled:$('enabled').checked,code:$('code').value.trim().toUpperCase(),percent:Number($('percent').value),startsAt:$('startsAt').value,endsAt:$('endsAt').value,timeZone:$('timeZone').value};
  const btn=$('saveBtn');btn.disabled=true;setStatus('Saving...');
- try{await api('/api/admin-menu','POST',{products:state.products,promo});dirty=false;setStatus('Saved! Your menu and promotions are now updated.');}
+ try{const answer=await api('/api/admin-menu','POST',{products:state.products,promo,version:state.version});state.version=answer.version;state.promo=promo;dirty=false;setStatus('Saved! Your menu and promotions are now updated.');}
  catch(e){setStatus(e.message,true)}finally{btn.disabled=false}
 }
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
