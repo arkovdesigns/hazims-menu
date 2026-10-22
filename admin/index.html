@@ -26,17 +26,17 @@ function drawProducts(openId){
  $('count').textContent=state.products.length+' products';
  $('products').innerHTML=state.products.filter(p=>!q||p.name.toLowerCase().includes(q)).map(p=>{
  const img=p.image?'<img class="thumb" src="'+esc(p.image)+'" alt="">':'<div class="thumb"></div>';
- return '<div class="product"><div class="productHead">'+img+'<div style="flex:1"><strong>'+esc(p.name)+'</strong><p class="muted">'+esc(p.category)+' · $'+Number(p.price).toFixed(2)+' / '+esc(p.unit)+(p.hidden?' · Hidden':'')+'</p></div><button class="secondary" onclick="editProduct('+JSON.stringify(p.id)+')">Edit</button></div>'+
+ return '<div class="product"><div class="productHead">'+img+'<div style="flex:1"><strong>'+esc(p.name)+'</strong><p class="muted">'+esc(p.category)+' · $'+Number(p.price).toFixed(2)+' / '+esc(p.unit)+(p.hidden?' · Hidden':'')+'</p></div><button class="secondary" onclick="editProduct('+esc(JSON.stringify(p.id))+')">Edit</button></div>'+
  '<div id="edit-'+esc(p.id)+'" class="editbox '+(p.id===openId?'':'hidden')+'"><div class="grid">'+
  field(p,'name','Product name')+field(p,'price','Price ($)','number')+field(p,'unit','Unit')+field(p,'category','Category')+'</div>'+
  field(p,'description','Description','textarea')+
- '<label>Photo</label><input type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadPhoto('+JSON.stringify(p.id)+',this)"><p class="muted">JPEG, PNG or WebP up to 4 MB. The photo is uploaded immediately; save the menu afterward.</p>'+
- '<div class="check"><input type="checkbox" '+(p.hidden?'checked':'')+' onchange="update('+JSON.stringify(p.id)+',\'hidden\',this.checked)"><label>Hide product from customers</label></div>'+
- '<div class="actions"><button class="danger" onclick="removeProduct('+JSON.stringify(p.id)+')">Delete product</button></div></div></div>';
+ '<label>Photo</label><input type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadPhoto('+esc(JSON.stringify(p.id))+',this)"><p class="muted">JPEG, PNG or WebP up to 4 MB. The photo is uploaded immediately; save the menu afterward.</p>'+
+ '<div class="check"><input type="checkbox" '+(p.hidden?'checked':'')+' onchange="update('+esc(JSON.stringify(p.id))+',\'hidden\',this.checked)"><label>Hide product from customers</label></div>'+
+ '<div class="actions"><button class="danger" onclick="removeProduct('+esc(JSON.stringify(p.id))+')">Delete product</button></div></div></div>';
  }).join('')||'<p class="muted">No matching products.</p>';
 }
 function field(p,k,label,type='text'){
- const cb='update('+JSON.stringify(p.id)+','+JSON.stringify(k)+',this.value)';
+ const cb='update('+esc(JSON.stringify(p.id))+','+JSON.stringify(k)+',this.value)';
  return '<label>'+esc(label)+'</label>'+(type==='textarea'?'<textarea oninput="'+esc(cb)+'">'+esc(p[k])+'</textarea>':'<input type="'+type+'" '+(type==='number'?'min="0" step="0.01" ':'')+'value="'+esc(p[k])+'" oninput="'+esc(cb)+'">');
 }
 function addProduct(){
