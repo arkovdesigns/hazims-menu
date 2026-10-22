@@ -37,7 +37,7 @@ function drawProducts(openId){
  }).join('')||'<p class="muted">No matching products.</p>';
 }
 function field(p,k,label,type='text'){
- const cb='update('+esc(JSON.stringify(p.id))+','+JSON.stringify(k)+',this.value)';
+ const cb='update('+JSON.stringify(p.id)+','+JSON.stringify(k)+',this.value)';
  return '<label>'+esc(label)+'</label>'+(type==='textarea'?'<textarea oninput="'+esc(cb)+'">'+esc(p[k])+'</textarea>':'<input type="'+type+'" '+(type==='number'?'min="0" step="0.01" ':'')+'value="'+esc(p[k])+'" oninput="'+esc(cb)+'">');
 }
 function addProduct(){
