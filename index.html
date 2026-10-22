@@ -7,8 +7,8 @@
  <input id="mapsLink" type="text" placeholder="Paste a Google Maps link or type your address / location" required>
  <p class="hint">Enter any Google Maps link, location name, or written address. All text is accepted.</p>
 </div><label>Order Notes (optional)<textarea id="notes" rows="2" placeholder="Any special requests or food notes"></textarea></label><button class="send" onclick="checkout()">Send Order via WhatsApp ↗</button><p class="note">WhatsApp will open with your itemized order. Please tap Send in WhatsApp to place it.</p></section></div><script>
-const productImages={0:'assets/tamara.jpg',2:'assets/znood.jpg',3:'assets/knefeh-cheese.jpg',4:'assets/knefeh-ashta.jpg',6:'assets/halawet-el-riz.jpg',7:'assets/halawet-el-jibn.jpg',8:'assets/baklava-mix.jpg',9:'assets/ward-elsham.jpg',10:'assets/barazek.jpg',11:'assets/ghraybeh.jpg',13:'assets/date-maamoul.jpg',15:'assets/mfroukeh.jpg',18:'assets/pistachio-maamoul.jpg',19:'assets/ashta-mix.jpg',17:'assets/maamoul-ashta.jpg',21:'assets/ousmaliy-ashta.jpg'};
-const data=[
+let productImages={0:'assets/tamara.jpg',2:'assets/znood.jpg',3:'assets/knefeh-cheese.jpg',4:'assets/knefeh-ashta.jpg',6:'assets/halawet-el-riz.jpg',7:'assets/halawet-el-jibn.jpg',8:'assets/baklava-mix.jpg',9:'assets/ward-elsham.jpg',10:'assets/barazek.jpg',11:'assets/ghraybeh.jpg',13:'assets/date-maamoul.jpg',15:'assets/mfroukeh.jpg',18:'assets/pistachio-maamoul.jpg',19:'assets/ashta-mix.jpg',17:'assets/maamoul-ashta.jpg',21:'assets/ousmaliy-ashta.jpg'};
+let data=[
 ['TAMARA',15,'500 g','Shortbread biscuit with a date filling, rolled in ground pistachio.','Cookies & Maamoul'],
 ['BASMA ASHTA',35,'1 kg','Crispy kataifi pastry with a rich ashta cream filling.','Cream & Knefeh'],
 ['ZNOOD',30,'Dozen (12 pcs)','Ashta cream wrapped in crispy filo pastry, deep-fried in ghee and dipped in rosewater syrup.','Cream & Knefeh'],
@@ -37,7 +37,7 @@ if(cart&&typeof cart==='object'&&!Array.isArray(cart)&&Object.prototype.hasOwnPr
  const legacyQty=Number(cart[22]);const existingQty=Number(cart[17]||0);
  if(Number.isFinite(legacyQty)&&legacyQty>0)cart[17]=(Number.isFinite(existingQty)&&existingQty>0?existingQty:0)+legacyQty;
  delete cart[22];try{localStorage.setItem('hazimCart',JSON.stringify(cart))}catch(e){}
-}const $=id=>document.getElementById(id);const money=n=>'$'+n.toFixed(2).replace('.00','');function save(){localStorage.setItem('hazimCart',JSON.stringify(cart))}function categories(){let a=['All',...new Set(data.map(x=>x[4]))];$('tabs').innerHTML=a.map(c=>`<button class="tab ${category===c?'active':''}" data-cat="${c}">${c}</button>`).join('');document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{category=b.dataset.cat;render()})}function render(){categories();let q=$('search').value.trim().toLowerCase();let arr=data.map((x,i)=>({...{x,i}})).filter(({x})=>(category==='All'||x[4]===category)&&(x[0]+' '+x[3]+' '+x[4]).toLowerCase().includes(q));$('products').innerHTML=arr.length?arr.map(({x,i})=>`<article class="item"><div class="item-content">${productImages[i]?'<img class="product-photo" src="'+productImages[i]+'" alt="'+x[0]+'" loading="lazy">':''}<div class="item-copy"><h3>${x[0]}</h3><div class="en">${x[4]}</div><p class="desc">${x[3]}</p></div></div><div class="bottom"><div><span class="price">${money(x[1])}</span><div class="unit">${x[2]}</div></div>${cart[i]?`<div class="qty"><button onclick="change(${i},-1)">−</button><b>${cart[i]}</b><button onclick="change(${i},1)">+</button></div>`:`<button class="add" onclick="change(${i},1)">＋ Add</button>`}</div></article>`).join(''):'<p>No matching items found.</p>';let n=Object.values(cart).reduce((a,b)=>a+b,0);$('count').textContent=n;$('sum').textContent=money(promoTotal())}function change(i,n){cart[i]=Math.max(0,(cart[i]||0)+n);if(!cart[i])delete cart[i];save();render();if($('overlay').classList.contains('open'))drawCart()}function calc(){return Object.entries(cart).reduce((s,[i,q])=>s+data[i][1]*q,0)}
+}const $=id=>document.getElementById(id);const money=n=>'$'+n.toFixed(2).replace('.00','');function save(){localStorage.setItem('hazimCart',JSON.stringify(cart))}function categories(){let a=['All',...new Set(data.filter(x=>x&&!x[5]).map(x=>x[4]))];$('tabs').innerHTML=a.map(c=>`<button class="tab ${category===c?'active':''}" data-cat="${c}">${c}</button>`).join('');document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{category=b.dataset.cat;render()})}function render(){categories();let q=$('search').value.trim().toLowerCase();let arr=data.map((x,i)=>({...{x,i}})).filter(({x})=>x&&!x[5]&&(category==='All'||x[4]===category)&&(x[0]+' '+x[3]+' '+x[4]).toLowerCase().includes(q));$('products').innerHTML=arr.length?arr.map(({x,i})=>`<article class="item"><div class="item-content">${productImages[i]?'<img class="product-photo" src="'+productImages[i]+'" alt="'+x[0]+'" loading="lazy">':''}<div class="item-copy"><h3>${x[0]}</h3><div class="en">${x[4]}</div><p class="desc">${x[3]}</p></div></div><div class="bottom"><div><span class="price">${money(x[1])}</span><div class="unit">${x[2]}</div></div>${cart[i]?`<div class="qty"><button onclick="change(${i},-1)">−</button><b>${cart[i]}</b><button onclick="change(${i},1)">+</button></div>`:`<button class="add" onclick="change(${i},1)">＋ Add</button>`}</div></article>`).join(''):'<p>No matching items found.</p>';let n=Object.values(cart).reduce((a,b)=>a+b,0);$('count').textContent=n;$('sum').textContent=money(promoTotal())}function change(i,n){cart[i]=Math.max(0,(cart[i]||0)+n);if(!cart[i])delete cart[i];save();render();if($('overlay').classList.contains('open'))drawCart()}function calc(){return Object.entries(cart).reduce((s,[i,q])=>s+(data[i]&&!data[i][5]?data[i][1]*q:0),0)}
 // Promotion times are interpreted in the selected Australian shop timezone.
 let promoConfig={enabled:false,code:'',percent:0,startsAt:'',endsAt:'',timeZone:'Australia/Sydney'};
 let appliedPromo=null;
@@ -56,9 +56,9 @@ function promoIsActive(p=promoConfig){
 }
 async function loadPromoConfig(){
  try{
-  const response=await fetch('promo.json?refresh='+Date.now(),{cache:'no-store'});
+  const response=await fetch('/api/menu?refresh='+Date.now(),{cache:'no-store'});
   if(!response.ok)throw Error('promo unavailable');
-  const cfg=await response.json();
+  const responseData=await response.json();const cfg=responseData.promo||{};
   promoConfig={enabled:cfg.enabled===true,code:String(cfg.code||'').trim().toUpperCase(),percent:Number(cfg.percent),startsAt:String(cfg.startsAt||''),endsAt:String(cfg.endsAt||''),timeZone:String(cfg.timeZone||'Australia/Sydney')};
   if(!promoIsActive()||appliedPromo!==promoConfig.code)appliedPromo=null;
   return true;
@@ -100,8 +100,8 @@ function openCart(){
  drawCart();$('overlay').classList.add('open');
  loadPromoConfig().then(()=>{updatePromoDisplay();if(!appliedPromo&&$('promoMessage').classList.contains('ok'))promoMessage('Promotion is no longer active.');});
 }
-function closeCart(){$('overlay').classList.remove('open')}function drawCart(){let entries=Object.entries(cart);$('lines').innerHTML=entries.length?entries.map(([i,q])=>`<div class="cartline"><span>${data[i][0]} <small>(${data[i][2]})</small><br> ${q} × ${money(data[i][1])}</span><span><b>${money(q*data[i][1])}</b> <button onclick="change(${i},-1)">−</button> <button onclick="change(${i},1)">+</button></span></div>`).join(''):'Your cart is empty';updatePromoDisplay()}function mode(){let delivery=document.querySelector('input[name=method]:checked').value==='delivery';$('inside').hidden=delivery;$('delivery').hidden=!delivery}async function checkout(){
-let entries=Object.entries(cart);
+function closeCart(){$('overlay').classList.remove('open')}function drawCart(){let entries=Object.entries(cart).filter(([i,q])=>data[i]&&!data[i][5]&&q>0);$('lines').innerHTML=entries.length?entries.map(([i,q])=>`<div class="cartline"><span>${data[i][0]} <small>(${data[i][2]})</small><br> ${q} × ${money(data[i][1])}</span><span><b>${money(q*data[i][1])}</b> <button onclick="change(${i},-1)">−</button> <button onclick="change(${i},1)">+</button></span></div>`).join(''):'Your cart is empty';updatePromoDisplay()}function mode(){let delivery=document.querySelector('input[name=method]:checked').value==='delivery';$('inside').hidden=delivery;$('delivery').hidden=!delivery}async function checkout(){
+let entries=Object.entries(cart).filter(([i,q])=>data[i]&&!data[i][5]&&q>0);
 if(!entries.length){alert('Add an item to your cart first');return}
 let delivery=document.querySelector('input[name=method]:checked').value==='delivery';
 let detail;
