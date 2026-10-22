@@ -20,7 +20,7 @@ async function login(){try{await api('/api/admin-session','POST',{password:$('pa
 async function logout(){await api('/api/admin-session','POST',{action:'logout'}).catch(()=>{});showDashboard(false);state={products:[],promo:{}}}
 async function load(){const j=await api('/api/admin-menu');state={products:j.products,promo:j.promo};['enabled','code','percent','startsAt','endsAt','timeZone'].forEach(k=>{if(k==='enabled')$(k).checked=!!j.promo[k];else $(k).value=j.promo[k]??''});drawProducts();dirty=false;setStatus('')}
 function editProduct(id){const p=state.products.find(x=>x.id===id);if(!p)return;const box=document.getElementById('edit-'+id);box.classList.toggle('hidden');if(!box.classList.contains('hidden'))box.scrollIntoView({behavior:'smooth',block:'nearest'})}
-function update(id,key,value){const p=state.products.find(x=>x.id===id);if(!p)return;p[key]=key==='price'?Number(value):key==='hidden'?!!value:value;dirty=true;if(key==='name'||key==='price'||key==='hidden')drawProducts(id)}
+function update(id,key,value){const p=state.products.find(x=>x.id===id);if(!p)return;p[key]=key==='price'?Number(value):key==='hidden'?!!value:value;dirty=true}
 function drawProducts(openId){
  const q=$('filter').value.trim().toLowerCase();
  $('count').textContent=state.products.length+' products';
