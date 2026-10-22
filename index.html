@@ -54,19 +54,18 @@ function promoIsActive(p=promoConfig){
  const now=shopClock(p.timeZone);
  return !!now&&now>=p.startsAt&&now<=p.endsAt;
 }
+async function verifyPromoCode(code){
+ const response=await fetch('/api/validate-promo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code}),cache:'no-store'});
+ if(!response.ok)throw Error('Promotion verification unavailable');
+ const check=await response.json();
+ if(!check.valid){appliedPromo=null;promoConfig={enabled:false,code:'',percent:0,startsAt:'',endsAt:'',timeZone:'Australia/Sydney'};return false}
+ promoConfig={enabled:true,code:code,percent:Number(check.percent),startsAt:String(check.startsAt),endsAt:String(check.endsAt),timeZone:String(check.timeZone)};
+ appliedPromo=code;return true;
+}
 async function loadPromoConfig(){
- try{
-  const response=await fetch('/api/menu?refresh='+Date.now(),{cache:'no-store'});
-  if(!response.ok)throw Error('promo unavailable');
-  const responseData=await response.json();const cfg=responseData.promo||{};
-  promoConfig={enabled:cfg.enabled===true,code:String(cfg.code||'').trim().toUpperCase(),percent:Number(cfg.percent),startsAt:String(cfg.startsAt||''),endsAt:String(cfg.endsAt||''),timeZone:String(cfg.timeZone||'Australia/Sydney')};
-  if(!promoIsActive()||appliedPromo!==promoConfig.code)appliedPromo=null;
-  return true;
- }catch(e){
-  promoConfig={enabled:false,code:'',percent:0,startsAt:'',endsAt:'',timeZone:'Australia/Sydney'};
-  appliedPromo=null;
-  return false;
- }
+ if(!appliedPromo)return true;
+ try{return await verifyPromoCode(appliedPromo)}
+ catch(e){appliedPromo=null;return false}
 }
 function promoDiscount(){
  if(!appliedPromo||appliedPromo!==promoConfig.code||!promoIsActive())return 0;
@@ -87,13 +86,12 @@ async function applyPromo(){
  const entered=$('promoInput').value.trim().toUpperCase();
  if(!entered){promoMessage('Please enter your promo code.');return}
  const button=$('promoApply');button.disabled=true;button.textContent='Checking…';
- const loaded=await loadPromoConfig();
- button.disabled=false;button.textContent='Apply';
- if(!loaded)promoMessage('Could not verify the code. Please try again.');
- else if(!promoIsActive())promoMessage('No active promotion is available right now.');
- else if(entered!==promoConfig.code)promoMessage('Invalid promo code.');
- else{appliedPromo=entered;promoMessage(promoConfig.percent+'% discount applied! Offer ends '+promoConfig.endsAt.replace('T',' ')+' ('+promoConfig.timeZone+').',true)}
- updatePromoDisplay();
+ try{
+  const accepted=await verifyPromoCode(entered);
+  if(accepted)promoMessage(promoConfig.percent+'% discount applied! Ends '+promoConfig.endsAt.replace('T',' ')+' ('+promoConfig.timeZone+').',true);
+  else promoMessage('Invalid or expired promo code.');
+ }catch(e){promoMessage('Could not verify the code. Please try again.')}
+ finally{button.disabled=false;button.textContent='Apply';updatePromoDisplay()}
 }
 function removePromo(){appliedPromo=null;$('promoInput').value='';promoMessage('');updatePromoDisplay()}
 function openCart(){
