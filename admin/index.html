@@ -7,6 +7,7 @@
 <p id="status" class="status"></p>
 <section class="panel"><div class="row"><h2>Products</h2><button onclick="addProduct()">+ Add product</button></div><input id="filter" placeholder="Search products..." oninput="drawProducts()"><div id="products"></div></section>
 <section class="panel"><h2>Percentage discount</h2><div class="check"><input type="checkbox" id="enabled"><label for="enabled">Enable promotion</label></div><div class="grid"><div><label for="code">Promo code</label><input id="code" placeholder="EID15" maxlength="32"></div><div><label for="percent">Discount (%)</label><input id="percent" type="number" min="0.1" max="100" step="0.1"></div><div><label for="startsAt">Start date and time</label><input id="startsAt" type="datetime-local"></div><div><label for="endsAt">End date and time</label><input id="endsAt" type="datetime-local"></div><div><label for="timeZone">Store timezone</label><select id="timeZone"><option>Australia/Sydney</option><option>Australia/Brisbane</option><option>Australia/Adelaide</option><option>Australia/Perth</option><option>Australia/Darwin</option><option>Australia/Hobart</option><option>Asia/Riyadh</option></select></div></div><p class="muted">The offer expires automatically at the selected time. Use the Save all changes button above to publish.</p></section>
+<section class="panel"><h2>Change owner password</h2><p class="muted">For security, change your temporary login password after your first sign-in.</p><label for="currentPassword">Current password</label><input type="password" id="currentPassword" autocomplete="current-password"><div class="grid"><div><label for="newPassword">New password (12+ characters)</label><input type="password" id="newPassword" autocomplete="new-password"></div><div><label for="confirmPassword">Confirm new password</label><input type="password" id="confirmPassword" autocomplete="new-password"></div></div><div class="actions"><button class="secondary" onclick="changePassword()">Change password</button></div><p id="passwordMsg" class="status"></p></section>
 <p><a href="/">← View customer menu</a></p></section>
 </main>
 <script>
@@ -55,6 +56,17 @@ async function uploadPhoto(id,input){
  const p=state.products.find(x=>x.id===id);if(p)p.image=result.url;
  dirty=true;drawProducts(id);setStatus('Photo uploaded. Click Save all changes to publish it.');
  }catch(e){setStatus(e.message,true)}
+}
+async function changePassword(){
+ const oldPass=$('currentPassword').value,newPass=$('newPassword').value,confirm=$('confirmPassword').value;
+ if(newPass.length<12){$('passwordMsg').textContent='Use at least 12 characters.';return}
+ if(newPass!==confirm){$('passwordMsg').textContent='Passwords do not match.';return}
+ try{
+  await api('/api/admin-password','POST',{currentPassword:oldPass,newPassword:newPass});
+  $('currentPassword').value='';$('newPassword').value='';$('confirmPassword').value='';
+  alert('Password changed successfully. Sign in with your new password.');
+  showDashboard(false);
+ }catch(e){$('passwordMsg').textContent=e.message}
 }
 async function saveAll(){
  const promo={enabled:$('enabled').checked,code:$('code').value.trim().toUpperCase(),percent:Number($('percent').value),startsAt:$('startsAt').value,endsAt:$('endsAt').value,timeZone:$('timeZone').value};
