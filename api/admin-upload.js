@@ -11,9 +11,15 @@ module.exports=async(req,res)=>{
  const len=Number(req.headers['content-length']||0);
  if(len>4*1024*1024)return res.status(413).json({error:'Maximum file size is 4 MB'});
  try{
-  const chunks=[];let total=0;
-  for await(const chunk of req){total+=chunk.length;if(total>4*1024*1024)return res.status(413).json({error:'Maximum file size is 4 MB'});chunks.push(chunk)}
-  const buffer=Buffer.concat(chunks);
+  let buffer;
+  if(Buffer.isBuffer(req.body))buffer=req.body;
+  else if(req.body instanceof Uint8Array)buffer=Buffer.from(req.body);
+  else{
+   const chunks=[];let total=0;
+   for await(const chunk of req){total+=chunk.length;if(total>4*1024*1024)return res.status(413).json({error:'Maximum file size is 4 MB'});chunks.push(chunk)}
+   buffer=Buffer.concat(chunks);
+  }
+  if(buffer.length>4*1024*1024)return res.status(413).json({error:'Maximum file size is 4 MB'});
   if(!buffer.length)return res.status(400).json({error:'Empty image'});
   const png=buffer.subarray(0,8).equals(Buffer.from('89504e470d0a1a0a','hex'));
   const jpg=buffer.subarray(0,3).equals(Buffer.from('ffd8ff','hex'));
