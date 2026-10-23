@@ -13,6 +13,7 @@
 <script>
 const $=id=>document.getElementById(id);
 let state={products:[],promo:{}},dirty=false,uploading=false;
+const photoUrl=url=>String(url).startsWith('assets/')?'/'+url:url;
 const photos=p=>Array.isArray(p.images)?p.images:(p.image?[p.image]:[]);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const setStatus=(s,error=false)=>{$('status').textContent=s;$('status').className='status'+(error?' error':'')};
@@ -27,7 +28,7 @@ function drawProducts(openId){
  const q=$('filter').value.trim().toLowerCase();
  $('count').textContent=state.products.length+' products';
  $('products').innerHTML=state.products.filter(p=>!q||p.name.toLowerCase().includes(q)).map(p=>{
- const img=p.image?'<img class="thumb" src="'+esc(p.image)+'" alt="">':'<div class="thumb"></div>';
+ const img=p.image?'<img class="thumb" src="'+esc(photoUrl(p.image))+'" alt="">':'<div class="thumb"></div>';
  return '<div class="product"><div class="productHead">'+img+'<div style="flex:1"><strong>'+esc(p.name)+'</strong><p class="muted">'+esc(p.category)+' · $'+Number(p.price).toFixed(2)+' / '+esc(p.unit)+(p.hidden?' · Hidden':'')+'</p></div><button class="secondary" onclick="editProduct('+esc(JSON.stringify(p.id))+')">Edit</button></div>'+
  '<div id="edit-'+esc(p.id)+'" class="editbox '+(p.id===openId?'':'hidden')+'"><div class="grid">'+
  field(p,'name','Product name')+field(p,'price','Price ($)','number')+field(p,'unit','Unit')+field(p,'category','Category')+'</div>'+
@@ -48,7 +49,7 @@ function addProduct(){
  $('filter').value='';dirty=true;drawProducts(id);setStatus('New product added as hidden. Edit its details, then unhide and Save all changes.');
 }
 function removeProduct(id){if(uploading)return;const p=state.products.find(x=>x.id===id);if(!p||!confirm('Delete '+p.name+'?'))return;state.products=state.products.filter(x=>x.id!==id);dirty=true;drawProducts()}
-function photoEditor(p){return '<div style="display:flex;gap:10px;flex-wrap:wrap">'+photos(p).map((url,i)=>'<div><img class="thumb" src="'+esc(url)+'" alt="Product photo '+(i+1)+'"><div class="actions">'+(i===0?'<span class="pill">Main photo</span>':'<button class="secondary" onclick="mainPhoto('+esc(JSON.stringify(p.id))+','+i+')">Make main</button>')+'<button class="secondary" onclick="removePhoto('+esc(JSON.stringify(p.id))+','+i+')">Remove photo</button></div></div>').join('')+'</div>'}
+function photoEditor(p){return '<div style="display:flex;gap:10px;flex-wrap:wrap">'+photos(p).map((url,i)=>'<div><img class="thumb" src="'+esc(photoUrl(url))+'" alt="Product photo '+(i+1)+'"><div class="actions">'+(i===0?'<span class="pill">Main photo</span>':'<button class="secondary" onclick="mainPhoto('+esc(JSON.stringify(p.id))+','+i+')">Make main</button>')+'<button class="secondary" onclick="removePhoto('+esc(JSON.stringify(p.id))+','+i+')">Remove photo</button></div></div>').join('')+'</div>'}
 function removePhoto(id,index){if(uploading)return;const p=state.products.find(x=>x.id===id);if(!p)return;p.images=photos(p).filter((_,i)=>i!==index);p.image=p.images[0]||'';dirty=true;drawProducts(id)}
 function mainPhoto(id,index){if(uploading)return;const p=state.products.find(x=>x.id===id);if(!p)return;const list=[...photos(p)];list.unshift(...list.splice(index,1));p.images=list;p.image=list[0]||'';dirty=true;drawProducts(id)}
 async function uploadPhoto(id,input){
