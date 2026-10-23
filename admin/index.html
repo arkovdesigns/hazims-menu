@@ -6,20 +6,21 @@
 <div class="toolbar row"><span><strong>Menu management</strong> <span id="count" class="pill"></span></span><div class="actions"><button onclick="saveAll()" id="saveBtn">Save all changes</button><button class="secondary" onclick="logout()">Sign out</button></div></div>
 <p id="status" class="status"></p>
 <section class="panel"><div class="row"><h2>Products</h2><button onclick="addProduct()">+ Add product</button></div><input id="filter" placeholder="Search products..." oninput="drawProducts()"><div id="products"></div></section>
-<section class="panel"><h2>Percentage discount</h2><div class="check"><input type="checkbox" id="enabled"><label for="enabled">Enable promotion</label></div><div class="grid"><div><label for="code">Promo code</label><input id="code" placeholder="EID15" maxlength="32"></div><div><label for="percent">Discount (%)</label><input id="percent" type="number" min="0.1" max="100" step="0.1"></div><div><label for="startsAt">Start date and time</label><input id="startsAt" type="datetime-local"></div><div><label for="endsAt">End date and time</label><input id="endsAt" type="datetime-local"></div><div><label for="timeZone">Store timezone</label><select id="timeZone"><option>Australia/Sydney</option><option>Australia/Brisbane</option><option>Australia/Adelaide</option><option>Australia/Perth</option><option>Australia/Darwin</option><option>Australia/Hobart</option><option>Asia/Riyadh</option></select></div></div><p class="muted">The offer expires automatically at the selected time. Use the Save all changes button above to publish.</p></section>
+<section class="panel"><h2>Percentage discount</h2><div class="check"><input type="checkbox" id="enabled"><label for="enabled">Enable promotion</label></div><div class="grid"><div><label for="code">Promo code</label><input id="code" placeholder="EID15" maxlength="32"></div><div><label for="percent">Discount (%)</label><input id="percent" type="number" min="0.1" max="100" step="0.1"></div><div><label for="startsAt">Start date and time</label><input id="startsAt" type="datetime-local"></div><div><label for="endsAt">End date and time</label><input id="endsAt" type="datetime-local"></div><div><label for="timeZone">Store timezone</label><select id="timeZone"><option>Australia/Melbourne</option><option>Australia/Brisbane</option><option>Australia/Adelaide</option><option>Australia/Perth</option><option>Australia/Darwin</option><option>Australia/Hobart</option><option>Asia/Riyadh</option></select></div></div><p class="muted">The offer expires automatically at the selected time. Use the Save all changes button above to publish.</p></section>
 <section class="panel"><h2>Change owner password</h2><p class="muted">For security, change your temporary login password after your first sign-in.</p><label for="currentPassword">Current password</label><input type="password" id="currentPassword" autocomplete="current-password"><div class="grid"><div><label for="newPassword">New password (12+ characters)</label><input type="password" id="newPassword" autocomplete="new-password"></div><div><label for="confirmPassword">Confirm new password</label><input type="password" id="confirmPassword" autocomplete="new-password"></div></div><div class="actions"><button class="secondary" onclick="changePassword()">Change password</button></div><p id="passwordMsg" class="status"></p></section>
 <p><a href="/">← View customer menu</a></p></section>
 </main>
 <script>
 const $=id=>document.getElementById(id);
-let state={products:[],promo:{}},dirty=false;
+let state={products:[],promo:{}},dirty=false,uploading=false;
+const photos=p=>Array.isArray(p.images)?p.images:(p.image?[p.image]:[]);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const setStatus=(s,error=false)=>{$('status').textContent=s;$('status').className='status'+(error?' error':'')};
 function showDashboard(show){$('loginPanel').classList.toggle('hidden',show);$('dashboard').classList.toggle('hidden',!show)}
 async function api(url,method='GET',body){const r=await fetch(url,{method,credentials:'same-origin',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store'});const j=await r.json().catch(()=>({error:'Unexpected server response'}));if(!r.ok)throw Error(j.error||'Request failed');return j}
 async function login(){try{await api('/api/admin-session','POST',{password:$('password').value});$('password').value='';await load();showDashboard(true)}catch(e){$('loginMsg').textContent=e.message;$('loginMsg').className='status error'}}
 async function logout(){await api('/api/admin-session','POST',{action:'logout'}).catch(()=>{});showDashboard(false);state={products:[],promo:{}}}
-async function load(){const j=await api('/api/admin-menu');state={products:j.products,promo:j.promo,version:j.version};['enabled','code','percent','startsAt','endsAt','timeZone'].forEach(k=>{if(k==='enabled')$(k).checked=!!j.promo[k];else $(k).value=j.promo[k]??''});drawProducts();dirty=false;setStatus('')}
+async function load(){const j=await api('/api/admin-menu');state={products:j.products,promo:j.promo,contact:j.contact,version:j.version};['enabled','code','percent','startsAt','endsAt','timeZone'].forEach(k=>{if(k==='enabled')$(k).checked=!!j.promo[k];else $(k).value=j.promo[k]??''});drawProducts();dirty=false;setStatus('')}
 function editProduct(id){const p=state.products.find(x=>x.id===id);if(!p)return;const box=document.getElementById('edit-'+id);box.classList.toggle('hidden');if(!box.classList.contains('hidden'))box.scrollIntoView({behavior:'smooth',block:'nearest'})}
 function update(id,key,value){const p=state.products.find(x=>x.id===id);if(!p)return;p[key]=key==='price'?Number(value):key==='hidden'?!!value:value;dirty=true}
 function drawProducts(openId){
@@ -31,7 +32,8 @@ function drawProducts(openId){
  '<div id="edit-'+esc(p.id)+'" class="editbox '+(p.id===openId?'':'hidden')+'"><div class="grid">'+
  field(p,'name','Product name')+field(p,'price','Price ($)','number')+field(p,'unit','Unit')+field(p,'category','Category')+'</div>'+
  field(p,'description','Description','textarea')+
- '<label>Photo</label><input type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadPhoto('+esc(JSON.stringify(p.id))+',this)"><p class="muted">JPEG, PNG or WebP up to 4 MB. The photo is uploaded immediately; save the menu afterward.</p>'+
+ '<label>Photos (optional)</label><input type="file" multiple accept="image/jpeg,image/png,image/webp" onchange="uploadPhoto('+esc(JSON.stringify(p.id))+',this)"><p class="muted">Choose up to 10 photos. JPEG, PNG or WebP, up to 4 MB each. Extra photos are optional. Save changes after uploading.</p>'+
+ photoEditor(p)+
  '<div class="check"><input type="checkbox" '+(p.hidden?'checked':'')+' onchange="update('+esc(JSON.stringify(p.id))+',\'hidden\',this.checked)"><label>Hide product from customers</label></div>'+
  '<div class="actions"><button class="danger" onclick="removeProduct('+esc(JSON.stringify(p.id))+')">Delete product</button></div></div></div>';
  }).join('')||'<p class="muted">No matching products.</p>';
@@ -45,17 +47,29 @@ function addProduct(){
  state.products.push({id,name:'New product',price:0,unit:'1 kg',category:'Other',description:'',image:'',hidden:true});
  $('filter').value='';dirty=true;drawProducts(id);setStatus('New product added as hidden. Edit its details, then unhide and Save all changes.');
 }
-function removeProduct(id){const p=state.products.find(x=>x.id===id);if(!p||!confirm('Delete '+p.name+'?'))return;state.products=state.products.filter(x=>x.id!==id);dirty=true;drawProducts()}
+function removeProduct(id){if(uploading)return;const p=state.products.find(x=>x.id===id);if(!p||!confirm('Delete '+p.name+'?'))return;state.products=state.products.filter(x=>x.id!==id);dirty=true;drawProducts()}
+function photoEditor(p){return '<div style="display:flex;gap:10px;flex-wrap:wrap">'+photos(p).map((url,i)=>'<div><img class="thumb" src="'+esc(url)+'" alt="Product photo '+(i+1)+'"><div class="actions">'+(i===0?'<span class="pill">Main photo</span>':'<button class="secondary" onclick="mainPhoto('+esc(JSON.stringify(p.id))+','+i+')">Make main</button>')+'<button class="secondary" onclick="removePhoto('+esc(JSON.stringify(p.id))+','+i+')">Remove photo</button></div></div>').join('')+'</div>'}
+function removePhoto(id,index){if(uploading)return;const p=state.products.find(x=>x.id===id);if(!p)return;p.images=photos(p).filter((_,i)=>i!==index);p.image=p.images[0]||'';dirty=true;drawProducts(id)}
+function mainPhoto(id,index){if(uploading)return;const p=state.products.find(x=>x.id===id);if(!p)return;const list=[...photos(p)];list.unshift(...list.splice(index,1));p.images=list;p.image=list[0]||'';dirty=true;drawProducts(id)}
 async function uploadPhoto(id,input){
- const file=input.files?.[0];if(!file)return;
- if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>4*1024*1024){setStatus('Please choose a JPG, PNG or WebP under 4 MB.',true);return}
+ if(uploading)return;
+ const files=Array.from(input.files||[]);if(!files.length)return;
+ const product=state.products.find(x=>x.id===id);if(!product)return;
+ if(photos(product).length+files.length>10){setStatus('Maximum 10 photos per product. Remove a photo first.',true);input.value='';return}
+ if(files.some(f=>!['image/jpeg','image/png','image/webp'].includes(f.type)||f.size>4*1024*1024)){setStatus('Each photo must be JPG, PNG or WebP under 4 MB.',true);input.value='';return}
+ uploading=true;$('saveBtn').disabled=true;input.disabled=true;
+ let uploaded=0;
  try{
- setStatus('Uploading photo...');
+ product.images=[...photos(product)];
+ for(const file of files){
+ setStatus('Uploading photo '+(uploaded+1)+' of '+files.length+'...');
  const response=await fetch('/api/admin-upload?name='+encodeURIComponent(file.name),{method:'POST',credentials:'same-origin',headers:{'Content-Type':file.type},body:file});
  const result=await response.json();if(!response.ok)throw Error(result.error||'Upload failed');
- const p=state.products.find(x=>x.id===id);if(p)p.image=result.url;
- dirty=true;drawProducts(id);setStatus('Photo uploaded. Click Save all changes to publish it.');
- }catch(e){setStatus(e.message,true)}
+ product.images.push(result.url);product.image=product.images[0];dirty=true;uploaded++;
+ }
+ setStatus(uploaded+' photos uploaded. Click Save all changes to publish.');
+ }catch(e){setStatus(e.message+(uploaded?' '+uploaded+' photos uploaded successfully; save to keep them.':''),true)}
+ finally{uploading=false;$('saveBtn').disabled=false;drawProducts(id)}
 }
 async function changePassword(){
  const oldPass=$('currentPassword').value,newPass=$('newPassword').value,confirm=$('confirmPassword').value;
@@ -69,9 +83,10 @@ async function changePassword(){
  }catch(e){$('passwordMsg').textContent=e.message}
 }
 async function saveAll(){
+ if(uploading)return;
  const promo={enabled:$('enabled').checked,code:$('code').value.trim().toUpperCase(),percent:Number($('percent').value),startsAt:$('startsAt').value,endsAt:$('endsAt').value,timeZone:$('timeZone').value};
  const btn=$('saveBtn');btn.disabled=true;setStatus('Saving...');
- try{const answer=await api('/api/admin-menu','POST',{products:state.products,promo,version:state.version});state.version=answer.version;state.promo=promo;dirty=false;setStatus('Saved! Your menu and promotions are now updated.');}
+ try{const answer=await api('/api/admin-menu','POST',{products:state.products,promo,contact:state.contact,version:state.version});state.version=answer.version;state.promo=promo;dirty=false;setStatus('Saved! Your menu and promotions are now updated.');}
  catch(e){setStatus(e.message,true)}finally{btn.disabled=false}
 }
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});

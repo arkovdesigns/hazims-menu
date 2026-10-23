@@ -1,7 +1,7 @@
 'use strict';
 const m=require('../lib/menu-store');
 function clock(tz){
- const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:tz||'Australia/Sydney',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).map(x=>[x.type,x.value]));
+ const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:tz||'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).map(x=>[x.type,x.value]));
  return parts.year+'-'+parts.month+'-'+parts.day+'T'+parts.hour+':'+parts.minute;
 }
 module.exports=async(req,res)=>{
@@ -19,3 +19,4 @@ module.exports=async(req,res)=>{
   return res.json({valid:true,code:entered,percent:p.percent,startsAt:p.startsAt,endsAt:p.endsAt,timeZone:p.timeZone,enabled:true});
  }catch(e){console.error('promo-verify',e.message);return res.status(503).json({error:'Promotion verification temporarily unavailable'})}
 };
+
