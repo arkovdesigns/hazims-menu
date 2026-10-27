@@ -30,7 +30,7 @@ function drawProducts(openId){
  $('count').textContent=state.products.length+' products';
  $('products').innerHTML=state.products.filter(p=>!q||p.name.toLowerCase().includes(q)).map(p=>{
  const img=p.image?'<img class="thumb" src="'+esc(photoUrl(p.image))+'" alt="">':'<div class="thumb"></div>';
- return '<div class="product"><div class="productHead">'+img+'<div style="flex:1"><strong>'+esc(p.name)+'</strong><p class="muted">'+esc(p.category)+' · $'+Number(p.price).toFixed(2)+' / '+esc(p.unit)+(p.stock===null||p.stock===undefined?' · Stock not tracked':' · Stock: '+Number(p.stock))+(p.hidden?' · Hidden':'')</p></div><button class="secondary" onclick="editProduct('+esc(JSON.stringify(p.id))+')">Edit</button></div>'+
+ return '<div class="product"><div class="productHead">'+img+'<div style="flex:1"><strong>'+esc(p.name)+'</strong><p class="muted">'+esc(p.category)+' · $'+Number(p.price).toFixed(2)+' / '+esc(p.unit)+(p.stock===null||p.stock===undefined?' · Stock not tracked':' · Stock: '+Number(p.stock))+(p.hidden?' · Hidden':'')+'</p></div><button class="secondary" onclick="editProduct('+esc(JSON.stringify(p.id))+')">Edit</button></div>'+
  '<div id="edit-'+esc(p.id)+'" class="editbox '+(p.id===openId?'':'hidden')+'"><div class="grid">'+
  field(p,'name','Product name')+field(p,'price','Price ($)','number')+field(p,'stock','Stock quantity','number')+field(p,'unit','Unit')+field(p,'category','Category')+'</div>'+
  field(p,'description','Description','textarea')+
