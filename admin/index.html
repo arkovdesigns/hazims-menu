@@ -24,15 +24,79 @@ async function logout(){await api('/api/admin-session','POST',{action:'logout'})
 async function load(){const j=await api('/api/admin-menu');state={products:j.products,promo:j.promo,contact:j.contact,version:j.version};['enabled','code','percent','startsAt','endsAt','timeZone'].forEach(k=>{if(k==='enabled')$(k).checked=!!j.promo[k];else $(k).value=j.promo[k]??''});drawProducts();loadVisitorStats();if(j.contact){$('contactPhone').value=j.contact.phone||'';$('contactInstagram').value=j.contact.instagram||''}dirty=false;setStatus('')}
 async function loadVisitorStats(){try{const j=await api('/api/visitor-stats');$('visitorTotal').textContent=Number(j.total||0).toLocaleString();$('visitorToday').textContent=Number(j.today||0).toLocaleString()}catch(e){$('visitorTotal').textContent='—';$('visitorToday').textContent='—'}}
 function editProduct(id){const p=state.products.find(x=>x.id===id);if(!p)return;const box=document.getElementById('edit-'+id);box.classList.toggle('hidden');if(!box.classList.contains('hidden'))box.scrollIntoView({behavior:'smooth',block:'nearest'})}
-function update(id,key,value){const p=state.products.find(x=>x.id===id);if(!p)return;p[key]=key==='price'?Number(value):(key==='hidden'||key==='featured'||key==='popular')?!!value:value;dirty=true}
+function update(id,key,value){const p=state.products.find(x=>x.id===id);if(!p)return;p[key]=key==='price'?Number(value):(key==='hidden'||key==='featured'||key==='popular')?!!value:(key==='price'||key==='stock')?(value===''?null:Number(value)):value;dirty=true}
 function drawProducts(openId){
  const q=$('filter').value.trim().toLowerCase();
  $('count').textContent=state.products.length+' products';
  $('products').innerHTML=state.products.filter(p=>!q||p.name.toLowerCase().includes(q)).map(p=>{
  const img=p.image?'<img class="thumb" src="'+esc(photoUrl(p.image))+'" alt="">':'<div class="thumb"></div>';
- return '<div class="product"><div class="productHead">'+img+'<div style="flex:1"><strong>'+esc(p.name)+'</strong><p class="muted">'+esc(p.category)+' · $'+Number(p.price).toFixed(2)+' / '+esc(p.unit)+(p.hidden?' · Hidden':'')+'</p></div><button class="secondary" onclick="editProduct('+esc(JSON.stringify(p.id))+')">Edit</button></div>'+
+ return '<div class="product"><div class="productHead">'+img+'<div style="flex:1"><strong>'+esc(p.name)+'</strong><p class="muted">'+esc(p.category)+' · +'</p></div><button class="secondary" onclick="editProduct('+esc(JSON.stringify(p.id))+')">Edit</button></div>'+
  '<div id="edit-'+esc(p.id)+'" class="editbox '+(p.id===openId?'':'hidden')+'"><div class="grid">'+
- field(p,'name','Product name')+field(p,'price','Price ($)','number')+field(p,'unit','Unit')+field(p,'category','Category')+'</div>'+
+ field(p,'name','Product name')+field(p,'price','Price ($)','number')+field(p,'stock','Stock quantity','number')+field(p,'unit','Unit')+field(p,'category','Category')+'</div>'+
+ field(p,'description','Description','textarea')+
+ '<label>Photos (optional)</label><input type="file" multiple accept="image/jpeg,image/png,image/webp" onchange="uploadPhoto('+esc(JSON.stringify(p.id))+',this)"><p class="muted">Stock is private and visible only in this dashboard. Choose up to 10 photos. JPEG, PNG or WebP, up to 4 MB each. Extra photos are optional. Save changes after uploading.</p>'+
+ photoEditor(p)+
+ '<div class="check"><input type="checkbox" '+(p.hidden?'checked':'')+' onchange="update('+esc(JSON.stringify(p.id))+',\'hidden\',this.checked)"><label>Hide product from customers</label></div><div class="check"><input type="checkbox" '+(p.featured?'checked':'')+' onchange="update('+esc(JSON.stringify(p.id))+',\'featured\',this.checked)"><label>Show as featured</label></div><div class="check"><input type="checkbox" '+(p.popular?'checked':'')+' onchange="update('+esc(JSON.stringify(p.id))+',\'popular\',this.checked)"><label>Mark as most ordered</label></div>'+
+ '<div class="actions"><button class="danger" onclick="removeProduct('+esc(JSON.stringify(p.id))+')">Delete product</button></div></div></div>';
+ }).join('')||'<p class="muted">No matching products.</p>';
+}
+function field(p,k,label,type='text'){
+ const cb='update('+JSON.stringify(p.id)+','+JSON.stringify(k)+',this.value)';
+ return '<label>'+esc(label)+'</label>'+(type==='textarea'?'<textarea oninput="'+esc(cb)+'">'+esc(p[k])+'</textarea>':'<input type="'+type+'" '+(type==='number'?'min="0" step="0.01" ':'')+'value="'+esc(p[k])+'" oninput="'+esc(cb)+'">');
+}
+function addProduct(){
+ const id='item_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6);
+ state.products.push({id,name:'New product',price:0,unit:'1 kg',category:'Other',description:'',image:'',hidden:true,featured:false,popular:false,stock:null});
+ $('filter').value='';dirty=true;drawProducts(id);setStatus('New product added as hidden. Edit its details, then unhide and Save all changes.');
+}
+function removeProduct(id){if(uploading)return;const p=state.products.find(x=>x.id===id);if(!p||!confirm('Delete '+p.name+'?'))return;state.products=state.products.filter(x=>x.id!==id);dirty=true;drawProducts()}
+function photoEditor(p){return '<div style="display:flex;gap:10px;flex-wrap:wrap">'+photos(p).map((url,i)=>'<div><img class="thumb" src="'+esc(photoUrl(url))+'" alt="Product photo '+(i+1)+'"><div class="actions">'+(i===0?'<span class="pill">Main photo</span>':'<button class="secondary" onclick="mainPhoto('+esc(JSON.stringify(p.id))+','+i+')">Make main</button>')+'<button class="secondary" onclick="removePhoto('+esc(JSON.stringify(p.id))+','+i+')">Remove photo</button></div></div>').join('')+'</div>'}
+function removePhoto(id,index){if(uploading)return;const p=state.products.find(x=>x.id===id);if(!p)return;p.images=photos(p).filter((_,i)=>i!==index);p.image=p.images[0]||'';dirty=true;drawProducts(id)}
+function mainPhoto(id,index){if(uploading)return;const p=state.products.find(x=>x.id===id);if(!p)return;const list=[...photos(p)];list.unshift(...list.splice(index,1));p.images=list;p.image=list[0]||'';dirty=true;drawProducts(id)}
+async function uploadPhoto(id,input){
+ if(uploading)return;
+ const files=Array.from(input.files||[]);if(!files.length)return;
+ const product=state.products.find(x=>x.id===id);if(!product)return;
+ if(photos(product).length+files.length>10){setStatus('Maximum 10 photos per product. Remove a photo first.',true);input.value='';return}
+ if(files.some(f=>!['image/jpeg','image/png','image/webp'].includes(f.type)||f.size>4*1024*1024)){setStatus('Each photo must be JPG, PNG or WebP under 4 MB.',true);input.value='';return}
+ uploading=true;$('saveBtn').disabled=true;input.disabled=true;
+ let uploaded=0;
+ try{
+ product.images=[...photos(product)];
+ for(const file of files){
+ setStatus('Uploading photo '+(uploaded+1)+' of '+files.length+'...');
+ const response=await fetch('/api/admin-upload?name='+encodeURIComponent(file.name),{method:'POST',credentials:'same-origin',headers:{'Content-Type':file.type},body:file});
+ const result=await response.json();if(!response.ok)throw Error(result.error||'Upload failed');
+ product.images.push(result.url);product.image=product.images[0];dirty=true;uploaded++;
+ }
+ setStatus(uploaded+' photos uploaded. Click Save all changes to publish.');
+ }catch(e){setStatus(e.message+(uploaded?' '+uploaded+' photos uploaded successfully; save to keep them.':''),true)}
+ finally{uploading=false;$('saveBtn').disabled=false;drawProducts(id)}
+}
+async function changePassword(){
+ const oldPass=$('currentPassword').value,newPass=$('newPassword').value,confirm=$('confirmPassword').value;
+ if(newPass.length<12){$('passwordMsg').textContent='Use at least 12 characters.';return}
+ if(newPass!==confirm){$('passwordMsg').textContent='Passwords do not match.';return}
+ try{
+  await api('/api/admin-password','POST',{currentPassword:oldPass,newPassword:newPass});
+  $('currentPassword').value='';$('newPassword').value='';$('confirmPassword').value='';
+  alert('Password changed successfully. Sign in with your new password.');
+  showDashboard(false);
+ }catch(e){$('passwordMsg').textContent=e.message}
+}
+async function saveAll(){
+ if(uploading)return;
+ const contact={phone:$('contactPhone').value.trim(),instagram:$('contactInstagram').value.trim()};const promo={enabled:$('enabled').checked,code:$('code').value.trim().toUpperCase(),percent:Number($('percent').value),startsAt:$('startsAt').value,endsAt:$('endsAt').value,timeZone:$('timeZone').value};
+ const btn=$('saveBtn');btn.disabled=true;setStatus('Saving...');
+ try{const answer=await api('/api/admin-menu','POST',{products:state.products,promo,contact,version:state.version});state.version=answer.version;state.promo=promo;dirty=false;setStatus('Saved! Your menu and promotions are now updated.');}
+ catch(e){setStatus(e.message,true)}finally{btn.disabled=false}
+}
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+(async()=>{try{const j=await api('/api/admin-session');if(j.authenticated){await load();showDashboard(true)}}catch(e){}})();
+</script></body></html>
++Number(p.price).toFixed(2)+' / '+esc(p.unit)+(p.stock===null||p.stock===undefined?' · Stock not tracked':' · Stock: '+Number(p.stock))+(p.hidden?' · Hidden':'')+'</p></div><button class="secondary" onclick="editProduct('+esc(JSON.stringify(p.id))+')">Edit</button></div>'+
+ '<div id="edit-'+esc(p.id)+'" class="editbox '+(p.id===openId?'':'hidden')+'"><div class="grid">'+
+ field(p,'name','Product name')+field(p,'price','Price ($)','number')+field(p,'stock','Stock quantity','number')+field(p,'unit','Unit')+field(p,'category','Category')+'</div>'+
  field(p,'description','Description','textarea')+
  '<label>Photos (optional)</label><input type="file" multiple accept="image/jpeg,image/png,image/webp" onchange="uploadPhoto('+esc(JSON.stringify(p.id))+',this)"><p class="muted">Choose up to 10 photos. JPEG, PNG or WebP, up to 4 MB each. Extra photos are optional. Save changes after uploading.</p>'+
  photoEditor(p)+
