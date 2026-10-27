@@ -116,13 +116,10 @@ if(delivery){
 }
 let lines=entries.map(([i,q],k)=>`${k+1}. ${data[i][0]} (${data[i][2]})\n   ${q} × ${money(data[i][1])} = ${money(q*data[i][1])}`).join('\n');
 let notes=$('notes').value.trim();
-let checkoutWindow=null;
 if(appliedPromo){
  const requestedCode=appliedPromo;
- checkoutWindow=window.open('about:blank','_blank');
  const refreshed=await loadPromoConfig();
  if(!refreshed||!promoIsActive()||appliedPromo!==requestedCode){
-  if(checkoutWindow)checkoutWindow.close();
   promoMessage('Promotion expired or changed. Please apply a valid code again.');
   updatePromoDisplay();alert('This promo code is no longer valid. Please review the updated total.');return;
  }
@@ -131,8 +128,7 @@ const discount=promoDiscount();
 const discountSummary=discount>0?'*Subtotal: '+money(calc())+'*\n*Promo code: '+promoConfig.code+' ('+promoConfig.percent+'%)*\n*Discount: -'+money(discount)+'*\n':'';
 let msg=`*New Order | Hazim’s Patisserie*\n━━━━━━━━━━━━\n${detail}\n━━━━━━━━━━━━\n${lines}\n━━━━━━━━━━━━\n${discountSummary}*Total: ${money(promoTotal())}*${notes?'\nNotes: '+notes:''}`;
 const whatsappUrl='https://wa.me/61449988509?text='+encodeURIComponent(msg);
-if(checkoutWindow)checkoutWindow.location.href=whatsappUrl;
-else window.open(whatsappUrl,'_blank','noopener,noreferrer');
+window.location.href=whatsappUrl;
 }
 $('search').addEventListener('input',render);
 $('promoInput').addEventListener('input',()=>{if(appliedPromo&&$('promoInput').value.trim().toUpperCase()!==appliedPromo){appliedPromo=null;promoMessage('');updatePromoDisplay()}});
