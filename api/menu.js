@@ -7,6 +7,6 @@ module.exports=async(req,res)=>{
   const state=await m.read();
   const p=state.promo||{};
   const promo={enabled:p.enabled===true,percent:p.percent,startsAt:p.startsAt,endsAt:p.endsAt,timeZone:p.timeZone};
-  return res.json({products:state.products.filter(x=>!x.hidden),promo,contact:state.contact||{phone:'+61449988509',instagram:''},version:state.version});
+  const products=state.products.filter(x=>!x.hidden).map(({id,name,price,unit,description,category,hidden,image,images,featured,popular})=>({id,name,price,unit,description,category,hidden,image,images,featured,popular}));return res.json({products,promo,contact:state.contact||{phone:'+61449988509',instagram:''},version:state.version});
  }catch(e){console.error('menu-public',e.message);const state=m.fallback();return res.json({products:state.products.filter(x=>!x.hidden),promo:{enabled:false},version:'offline'})}
 };
